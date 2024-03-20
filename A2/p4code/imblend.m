@@ -1,10 +1,65 @@
-function  output = imblend( source, mask, target, transparent )
+function  output = imblend(source, mask, target)
 %Source, mask, and target are the same size (as long as you do not remove
 %the call to fiximages.m). You may want to use a flag for whether or not to
 %treat the source object as 'transparent' (e.g. taking the max gradient
 %rather than the source gradient).
 
-output = source .* mask + target .* ~mask;
+
+
+
+[rows, cols, deps] = size(source);
+n = rows * cols;
+
+mask = logical(mask);
+
+
+
+for dep = 1:deps
+    A = sparse(n, n);
+    b = zeros(n, 1);
+    for row = 1:rows
+        for col = 1:cols
+            idx = sub2ind([rows, cols], row, col);
+            if mask(row, col)
+                    A(idx, idx) = 4;
+                    if row > 1 
+                        A(idx, sub2ind([rows, cols], row-1, col)) = -1;
+                        b(idx) = b(idx) - source(row-1, col, dep);
+                    end
+                    if row < rows 
+                        A(idx, sub2ind([rows, cols], row+1, col)) = -1;
+                        b(idx) = b(idx) - source(row+1, col, dep);
+                    end
+                    if col > 1 
+                        A(idx, sub2ind([rows, cols], row, col-1)) = -1;
+                        b(idx) = b(idx) - source(row, col-1, dep);
+                    end
+                    if col < cols
+                        A(idx, sub2ind([rows, cols], row, col+1)) = -1;
+                        b(idx) = b(idx) - source(row, col+1, dep);
+                    end
+                    
+                    b(idx) = b(idx) + 4 * source(row, col, dep);
+                else
+    
+                    A(idx, idx) = 1;
+                    b(idx) = target(row, col, dep);
+    
+            end
+        end
+    end
+    x = A\b;
+    layer = reshape(x, [rows, cols]);
+    output(:,:,dep) = layer;
+end
+
+
+%output = source .* mask + target .* ~mask;
+
+
+
+
+
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % As explained on the web page, we solve for output by setting up a large
@@ -54,5 +109,8 @@ output = source .* mask + target .* ~mask;
 %      pixels in the image. It's faster if you simply do the conversion
 %      yourself, though.
 %   see also find, sort, diff, cat, and spy
+
+
+
 
 

@@ -8,6 +8,9 @@ clear variables
 
 data_dir = './../data';
 out_dir = './results';
+if ~exist(out_dir, 'dir')
+    mkdir(out_dir);
+end
 
 %there are four inputs for each compositing operation -- 
 % 1. 'source' image. Parts of this image will be inserted into 'target'
@@ -20,13 +23,16 @@ out_dir = './results';
 %     below for the default test cases. They are of the form [y, x] where
 %     positive values mean shifts down and to the right, respectively.
 
-offset = cell(6,1);
+offset = cell(9,1);
 offset{1} = [ 210  10 ];
 offset{2} = [  10  28 ];
 offset{3} = [ 140 80 ];
 offset{4} = [  -40  90 ];
 offset{5} = [  60 100 ];
 offset{6} = [ -28  88 ];
+offset{7} = [30, -50];
+offset{8} = [45, 100];
+offset{9} = [0, 0];
 
 for i = 1:length(offset)
     source = imread(sprintf('%s/source_%02d.jpg',data_dir,i));
